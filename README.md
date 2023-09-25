@@ -6,3 +6,6 @@ with express, and utilized mongo db as the database.
 
 Deployed Site
 https://jolly-figolla-106c15.netlify.app/login
+
+Side Note:
+To viewers that wish to download this repo and run it locally, you must enter your own endpoints in the frontend and api directories .env files to run the app locally.
