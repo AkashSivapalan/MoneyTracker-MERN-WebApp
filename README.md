@@ -5,7 +5,7 @@ with express, and utilized mongo db as the database.
 
 
 Deployed Site
-(https://stirring-kheer-d8d0cf.netlify.app/)
+https://joyful-tanuki-47828e.netlify.app/
 
   ->Sample User:
     -Username: test2@gmail.com
