@@ -16,7 +16,6 @@ app.use(express.json());
 
 
 
-
 app.get('/api/test', (req, res) => {
     console.log('hello');
 
@@ -73,7 +72,8 @@ app.post('/api/transaction', async (req, res) => {
     // console.log(process.env.MONGO_URL);
 
     await mongoose.connect(process.env.MONGO_URL);
-    const { name, description, datetime,price,email } = req.body;
+    const { name, description, datetime, price, email } = req.body;
+
     const transaction =await Transaction.create({ name, price, description, datetime,email });
 
 

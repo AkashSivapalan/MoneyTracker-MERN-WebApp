@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../utils/AuthContext'
-
+import logo from '../assets/logo.png';
 
 const Header = () => {
     const navigate = useNavigate()
@@ -16,7 +16,8 @@ const Header = () => {
   return (
     <div className="header">
         <div>
-            <Link id="header-logo" to="/">LOGO</Link>
+        {/* <Link id="header-logo" to="/">LOGO</Link> */}
+        <img height={"75px"} width={"75px"} src={logo} alt="" />
         </div>
 
           <div className="links--wrapper">
