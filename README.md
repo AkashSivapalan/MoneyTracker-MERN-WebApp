@@ -5,7 +5,11 @@ with express, and utilized mongo db as the database.
 
 
 Deployed Site
-https://jolly-figolla-106c15.netlify.app/login
+(https://stirring-kheer-d8d0cf.netlify.app/)
+
+  ->Sample User:
+    -Username: test2@gmail.com
+    -Password: test123
 
 Side Note:
 To viewers that wish to download this repo and run it locally, you must enter your own endpoints in the frontend and api directories .env files to run the app locally.
