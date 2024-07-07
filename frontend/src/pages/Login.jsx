@@ -20,8 +20,6 @@ const Login = () => {
     e.preventDefault()
     const email = loginForm.current.email.value
     const password = loginForm.current.password.value
-    console.log(email)
-    console.log(password)
     const userInfo = { email, password }
     loginUser(userInfo)
   }

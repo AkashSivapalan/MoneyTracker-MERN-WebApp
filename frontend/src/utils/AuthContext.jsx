@@ -1,76 +1,95 @@
 import { useContext, useState, useEffect, createContext } from "react";
-import jwt from 'jwt-decode'
-import jwtDecode from "jwt-decode";
-
+import {  toast } from 'react-toastify';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    
-    const [loading, setLoading] = useState(false)
-    const [user, setUser] = useState(null)
-
+    const [loading, setLoading] = useState(true); // Initially loading is true
+    const [user, setUser] = useState(null);
+    const regErr = () => toast.error("Email was taken!");
+    const regSucc = ()=>toast.success("Registration Successful!")
+    const LoginErr = () => toast.error("Invalid email/password!");
     useEffect(() => {
-        try {
-            const jwt = localStorage.getItem("token");
-            const acc = jwtDecode(jwt);
-            setUser(acc)
-        } catch(error) { }
-        
-        setLoading(false)
-    }, [])
+        const checkAuth = async () => {
+            try {
+                const response = await fetch(import.meta.env.VITE_REACT_APP_API_URL +'/check-auth', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    setUser(data.user);
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("Error checking authentication status:", error);
+                setUser(null);
+            }
+            setLoading(false);
+        };
+
+        checkAuth();
+    }, []);
     
-    const loginUser = async(userInfo) => {
-        setLoading(true)
+    const loginUser = async (userInfo) => {
+        setLoading(true);
 
         try {
             const url = import.meta.env.VITE_REACT_APP_API_URL + '/login';
 
-            const email = userInfo.email
-            const password = userInfo.password
+            const email = userInfo.email;
+            const password = userInfo.password;
 
             const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-type': 'application/json' },
-            body: JSON.stringify({
-                email,
-                password,
-            })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ email, password }),
             });
-
-            const data = await response.json()
-            console.log(data.user)
-
-            if (data.user) {
-                const acc = jwt(data.user);
-                localStorage.setItem('token',data.user)
-                alert('Login successful')
-                setUser(acc)
+            const data = await response.json();
+            if (data.status === 'ok') {
+                setUser(data.user); // Store user information in state
             } else {
-                alert('Please check your username and password')
+                LoginErr()
             }
-
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
 
-        setLoading(false)
-     }
-    const logoutUser = () => {
-        localStorage.removeItem("token");
-        setUser(null);
+        setLoading(false);
+    };
 
-    }
-    const registerUser = async(userInfo) => { 
-        setLoading(true)
+    const logoutUser = async () => {
+     
+        try {
+            const url = `${import.meta.env.VITE_REACT_APP_API_URL}/logout`;
+            const res = await fetch(url, {
+                method: 'POST',
+                credentials: 'include',
+            });
+    
+            if (res.ok) {
+                setUser(null);
+            } else {
+                console.error('Logout failed:', res.statusText);
+            }
+        } catch (error) {
+            console.log('Logout error:', error);
+        }
+    };
 
+    const registerUser = async (userInfo) => { 
+        setLoading(true);
+    
         try {
             const url = import.meta.env.VITE_REACT_APP_API_URL + '/register';
-            const name = userInfo.name
-            const email = userInfo.email
-            const password = userInfo.password1
-            
-            
-            const response = await fetch(url, {
+            const name = userInfo.name;
+            const email = userInfo.email;
+            const password = userInfo.password1;
+    
+            const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-type': 'application/json' },
                 body: JSON.stringify({
@@ -79,40 +98,39 @@ export const AuthProvider = ({ children }) => {
                     name,
                 })
             });
-
-            const data = await response.json()
-
-            console.log(data)
-
-
-
-        } catch(error) {
-            console.log(error)
+    
+            const data = await res.json();
+            if (res.ok) {
+                regSucc();
+            } else {
+                regErr(data.error || 'Registration failed');
+            }
+        } catch (error) {
+            console.log(error);
+            regErr('Network error or server is down');
         }
-
-        setLoading(false)
-    }
-
-
-    const checkUserStatus = () => {
-        
-    }
+    
+        setLoading(false);
+    };
+    
 
     const contextData = {
         user,
         loginUser,
         logoutUser,
         registerUser,
-
-    }
+        loading,
+    };
      
     return (
-        <AuthContext.Provider value={ contextData}>
-        {loading ? <p>Loading...</p>: children}
-    </AuthContext.Provider>)
+        <AuthContext.Provider value={contextData}>
+            {loading ? <p>Loading...</p> : children}
+        </AuthContext.Provider>
+    );
+};
 
-}
+export const useAuth = () => {
+    return useContext(AuthContext);
+};
 
-export const useAuth = () => { return useContext(AuthContext) }
-
-export default AuthContext
+export default AuthContext;

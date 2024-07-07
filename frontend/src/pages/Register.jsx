@@ -1,13 +1,14 @@
 import React,{useRef} from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../utils/AuthContext'
-
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const Register = () => {
 
   const registrationForm = useRef(null)
 
   const { registerUser } = useAuth();
-
+  const notify = () => toast.error("Passwords do not match!");
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -17,7 +18,7 @@ const Register = () => {
     const password2=registrationForm.current.password2.value;
   
     if (password1 !== password2) {
-      alert('Passwords do not match!')
+      notify()
       return
     }
     const userInfo = { name, email, password1, password2 }

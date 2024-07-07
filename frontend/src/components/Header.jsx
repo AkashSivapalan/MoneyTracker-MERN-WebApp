@@ -1,11 +1,11 @@
 import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate ,useLocation} from 'react-router-dom'
 import { useAuth } from '../utils/AuthContext'
 import logo from '../assets/logo.png';
 
 const Header = () => {
     const navigate = useNavigate()
-
+    const location = useLocation();
     const { user,logoutUser } = useAuth()
     
   const logoutClick = () => {
@@ -29,10 +29,13 @@ const Header = () => {
                 <button onClick={logoutClick} className="btn">Logout</button>
             </>
               ) : (   
-             <>
-
-                <Link className="btn" to="/login">Login</Link>
-            </>  
+                <>
+                {location.pathname === '/login' ? (
+                    <Link className="btn" to="/register">Register</Link>
+                ) : (
+                    <Link className="btn" to="/login">Login</Link>
+                )}
+            </> 
               )}
 
         </div>

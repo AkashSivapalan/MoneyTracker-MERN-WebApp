@@ -8,7 +8,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import PrivateRoutes from './utils/PrivateRoutes'
 import { AuthProvider } from './utils/AuthContext'
-
+import { ToastContainer } from 'react-toastify';
 function App() {
 
   return (

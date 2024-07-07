@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Home.css";
-import jwtDecode from "jwt-decode";
+import { formatDate } from '../utils/formatDate'; 
+import transactionService from "../utils/transactionService";
 
 function Home() {
   const [name, setName] = useState("");
@@ -8,81 +9,104 @@ function Home() {
   const [description, setDescription] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [error, setError] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState(0);
+  const [fraction, setFraction] = useState(0);
 
   useEffect(() => {
-    getTransactions().then((transactions) => {
-      setTransactions(transactions.reverse());
-    });
+    const fetchData = async () => {
+      await checkAuthStatus();
+      setLoading(false);
+    };
+
+    fetchData();
   }, []);
 
-  async function getTransactions() {
-    const jwt = localStorage.getItem("token");
-    const acc = jwtDecode(jwt);
-    const email = acc.email;
+  useEffect(() => {
+    if (user) {
+      fetchTransactions(user.email);
+    }
+  }, [user]);
 
-    const url = import.meta.env.VITE_REACT_APP_API_URL + "/transactions";
-    const response = await fetch(url);
-    const data = await response.json();
-    return data.filter((d) => d.email === email);
+  const fetchTransactions = async (email) => {
+    try {
+      const transactions = await transactionService.getTransactions({ email });
+      setTransactions(transactions.reverse());
+
+      const { balance, fraction } = transactionService.getBalance(transactions);
+      setBalance(balance);
+      setFraction(fraction);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+    }
+  };
+
+  async function checkAuthStatus() {
+    try {
+      const url = import.meta.env.VITE_REACT_APP_API_URL + '/check-auth';
+      const response = await fetch(url, {
+        credentials: 'include' 
+      });
+      const data = await response.json();
+      if (data.status === 'ok') {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error checking authentication status:', error);
+      setUser(null);
+    }
   }
 
   function handleSubmit(ev) {
-    const url = import.meta.env.VITE_REACT_APP_API_URL + "/transaction";
-    
-    console.log(url)
+    ev.preventDefault();
+
     if (
       datetime === "" ||
       description === "" ||
       name.split(" ").length < 2 ||
-      !!isNaN(+name.split(" ")[0])
+      isNaN(+name.split(" ")[0])
     ) {
-      console.log("Enter all input fields");
       setError(true);
-      ev.preventDefault();
-    } else {
-      const price = name.split(" ")[0];
-      const jwt = localStorage.getItem("token");
-      const acc = jwtDecode(jwt);
-
-      const email = acc.email;
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-type": "application/json" },
-        body: JSON.stringify({
-          price,
-          name: name.substring(price.length + 1),
-          description,
-          datetime,
-          email,
-        }),
-      }).then((response) => {
-        response.json().then((json) => {
-          setName("");
-          setDatetime("");
-          setDescription("");
-          setError(false);
-          getTransactions().then((transactions) => {
-            setTransactions(transactions.reverse());
-          });
-        });
-      });
+      return;
     }
+
+    const price = name.split(" ")[0];
+    const email = user.email;
+
+    transactionService.postTransaction(price, name, description, datetime, email)
+      .then(response => {
+        if (response.ok) {
+          response.json().then(() => {
+            setName("");
+            setDatetime("");
+            setDescription("");
+            setError(false);
+
+            fetchTransactions(email);
+          });
+        } else {
+          console.error('Transaction failed:', response.statusText);
+          setError(true);
+        }
+      })
+      .catch(error => {
+        console.error('Transaction error:', error);
+        setError(true);
+      });
   }
 
-  let balance = 0;
-  for (const transaction of transactions) {
-    balance = balance + transaction.price;
+  if (loading) {
+    return <div>Loading...</div>;
   }
-
-  balance = balance.toFixed(2);
-  const fraction = balance.split(".")[1];
-  balance = balance.split(".")[0];
 
   return (
     <main>
       <h1>
         ${balance}
-        <span>.{+fraction}</span>
+        <span>.{fraction}</span>
       </h1>
       <form onSubmit={handleSubmit}>
         <div className="basic">
@@ -118,7 +142,7 @@ function Home() {
       <div className="transactions">
         {transactions.length > 0 &&
           transactions.map((transaction) => (
-            <div className="transaction">
+            <div className="transaction" key={transaction._id}>
               <div className="left">
                 <div className="name">{transaction.name}</div>
                 <div className="description">{transaction.description}</div>
@@ -132,7 +156,7 @@ function Home() {
                 >
                   {transaction.price}
                 </div>
-                <div className="datetime">2023-09-09 20:12</div>
+                <div className="datetime">{formatDate(transaction.datetime)}</div>
               </div>
             </div>
           ))}

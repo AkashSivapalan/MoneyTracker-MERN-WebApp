@@ -70,8 +70,12 @@
     border:1px solid #000;
     text-decoration: none;
     line-height: normal;
+    margin:10px;
 }
 
+.filter-buttons{
+    display: flex;
+}
 
 .btn:hover{
     background-color: #fff;
